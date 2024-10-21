@@ -9,11 +9,13 @@ using NUnit.Framework;
 using Unity.Collections;
 using UnityEngine;
 
-public class SessionManager : NetworkBehaviour
+public class SessionManager : MonoBehaviour
 {
     //----Active Server Variables----//
-    private NetworkManager currentNetworkManager; // The networkmanager attached to the connected game session.
-    private Dictionary<ushort, NetworkManager> activeSessions = new Dictionary<ushort, NetworkManager>(); // Dictionary to store active game sessions and their ports
+    [HideInInspector] 
+    public ushort currentNetworkManagerPort = 0; // The networkmanager's port attached to the connected game session.
+    [HideInInspector] 
+    public Dictionary<ushort, NetworkManager> activeSessions = new Dictionary<ushort, NetworkManager>(); // Dictionary to store active game sessions and their ports
     
     //----Server Settings----//
     [Header("Server Settings")]
@@ -27,8 +29,10 @@ public class SessionManager : NetworkBehaviour
     [Header("References")]
     [SerializeField, Tooltip("NetworkManager prefab for each game session")] 
     private GameObject networkManagerPrefab;
-    [SerializeField, Tooltip("The main NetworkManager for the mainmenu scene, this connects players to other game sessions.")] 
-    private NetworkManager mainNetworkManager;
+    [Tooltip("The main NetworkManager for the mainmenu scene, this connects players to other game sessions.")] 
+    public NetworkManager mainNetworkManager;
+    [HideInInspector, Tooltip("Used to identify whether DoNotDestroyOnLoad has been called already or not within the MainMenuManager class for the NetworkManager")]
+    public bool isDDOLActive = false;
     
     //-------------------------------//
     //    Start Initial Connection   //
@@ -114,84 +118,32 @@ public class SessionManager : NetworkBehaviour
             return false;
         }
     }
-
-    [Client] 
+    
     public void FindSession()
     {
-        FindSessionServer(mainNetworkManager.ClientManager.Connection);
+        FindFirstObjectByType<SessionNetworkManager>().FindSessionServer(mainNetworkManager.ClientManager.Connection, maxPlayers);
     }
-
-    [ServerRpc(RequireOwnership = false)]
-    private void FindSessionServer(NetworkConnection client)
-    {
-        // Check dictionary for any available servers
-        foreach (var server in activeSessions)
-        {
-            if (server.Value.ClientManager.Clients.Count < maxPlayers)
-            {
-                // Ensure the session manager is valid on the server side
-                if (server.Value == null)
-                {
-                    Debug.LogError($"Session Manager for port {server.Key} not found on server!");
-                    return;
-                }
-
-                Debug.Log($"Found available session on port {server.Key}, connecting client...");
-                JoinSessionTarget(client, server.Key);
-                return;
-            }
-        }
-
-        // If no sessions are available, create a new one
-        NetworkManager newServer = StartNewSession();
-        Debug.Log($"No available sessions found, created new session on port {newServer.TransportManager.Transport.GetPort()}.");
-
-        JoinSessionTarget(client, newServer.TransportManager.Transport.GetPort());
-    }
-
-    [TargetRpc]
-    private void JoinSessionTarget(NetworkConnection target, ushort serverPort)
-    {
-        // Update UI to show a game has been found
-        FindFirstObjectByType<MainMenuManager>().UIGameFound();
-        
-        // Stop the current connection to the lobby
-        if (mainNetworkManager.ClientManager.Connection.IsActive)
-        {
-            Debug.Log("Stopping current connection to the lobby before joining new game session...");
-            mainNetworkManager.ClientManager.StopConnection();
-        }
-
-        // Start the connection to the game session
-        Debug.Log($"Client is attempting to connect to game session on port {serverPort}");
-        if (mainNetworkManager.ClientManager.StartConnection(serverPort))
-        {
-            Debug.Log($"Client successfully connected to game session on port {serverPort}");
-            currentNetworkManager = activeSessions[serverPort];
-        }
-    }
-
-    [Client]
+    
     private void LeaveSession()
     {
         // Ensures that server is connected or exists
-        if (currentNetworkManager == null)
+        if (currentNetworkManagerPort == 0)
         {
-            Debug.LogError("Tried to leave server but currentNetworkManager is null");
+            Debug.LogError("Tried to leave server but currentNetworkManager is not set/== 0");
             return;
         }
         
         // Stop connection to game session
-        if (currentNetworkManager.ClientManager.Connection.IsActive)
+        if (mainNetworkManager.ClientManager.Connection.IsActive)
         {
             Debug.Log("Stopping current connection to the game session before joining lobby...");
             
             // Ensures that the connection is stopped successfully
-            if (!currentNetworkManager.ClientManager.StopConnection()) {
-                Debug.LogError($"Client failed to disconnect to game session on port {currentNetworkManager.TransportManager.Transport.GetPort()}");
+            if (!mainNetworkManager.ClientManager.StopConnection()) {
+                Debug.LogError($"Client failed to disconnect to game session on port {currentNetworkManagerPort}");
                 return;
             }
-            currentNetworkManager = null;
+            currentNetworkManagerPort = 0;
         }
         
         // Start the connection to the lobby

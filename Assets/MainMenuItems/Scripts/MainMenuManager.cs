@@ -1,5 +1,6 @@
 using System;
 using FishNet.Managing;
+using FishNet.Object;
 using UnityEngine;
 
 public class MainMenuManager : MonoBehaviour
@@ -9,14 +10,19 @@ public class MainMenuManager : MonoBehaviour
     [SerializeField] private GameObject GameSearchScreen;
     [SerializeField] private GameObject SearchingForGameText;
     [SerializeField] private GameObject GameFoundText;
-
-    private void Awake()
-    {
-        DontDestroyOnLoad(FindFirstObjectByType<NetworkManager>());
-    }
-
+    [SerializeField] private GameObject ConnectingToServerScreen;
+    
     void Start()
     {
+        SessionManager SM = FindFirstObjectByType<SessionManager>();
+        if (!SM.isDDOLActive)
+        {
+            OpenConnectingToServerScreen();
+            DontDestroyOnLoad(FindFirstObjectByType<NetworkManager>());
+            DontDestroyOnLoad(FindFirstObjectByType<SessionManager>());
+            return;
+        }
+        
         OpenTitleScreen();
     }
     
@@ -27,6 +33,7 @@ public class MainMenuManager : MonoBehaviour
     {
         TitleScreen.SetActive(false);
         GameSearchScreen.SetActive(false);
+        ConnectingToServerScreen.SetActive(false);
     }
     public void OpenTitleScreen()
     {
@@ -39,6 +46,12 @@ public class MainMenuManager : MonoBehaviour
         GameSearchScreen.SetActive(true);
         SearchingForGameText.SetActive(true);
         GameFoundText.SetActive(false);
+    }
+
+    public void OpenConnectingToServerScreen()
+    {
+        CloseAllScreens();
+        ConnectingToServerScreen.SetActive(true);
     }
     public void UIGameFound()
     {
