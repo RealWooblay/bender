@@ -8,7 +8,7 @@ using NUnit.Framework;
 using Unity.Collections;
 using UnityEngine;
 
-public class SessionManager : NetworkBehaviour
+public class SessionManager : MonoBehaviour
 {
     //----Active Server Variables----//
     private NetworkManager currentNetworkManager; // The networkmanager attached to the connected game session.
@@ -145,8 +145,11 @@ public class SessionManager : NetworkBehaviour
     }
 
     [TargetRpc]
-    private void JoinSessionTarget(NetworkConnection client, ushort serverPort)
+    private void JoinSessionTarget(NetworkConnection target, ushort serverPort)
     {
+        // Update UI to show a game has been found
+        FindFirstObjectByType<MainMenuManager>().UIGameFound();
+        
         // Stop the current connection to the lobby
         if (mainNetworkManager.ClientManager.Connection.IsActive)
         {

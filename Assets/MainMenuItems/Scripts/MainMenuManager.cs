@@ -1,19 +1,28 @@
+using System;
+using FishNet.Managing;
 using UnityEngine;
 
 public class MainMenuManager : MonoBehaviour
 {
-    // UI Variables
+    //----UI Variables----//
     [SerializeField] private GameObject TitleScreen;
     [SerializeField] private GameObject GameSearchScreen;
     [SerializeField] private GameObject SearchingForGameText;
     [SerializeField] private GameObject GameFoundText;
-    
+
+    private void Awake()
+    {
+        DontDestroyOnLoad(FindFirstObjectByType<NetworkManager>());
+    }
+
     void Start()
     {
         OpenTitleScreen();
     }
-
-    //------UI FUNCTIONS------//
+    
+    //-------------------------------//
+    //         UI FUNCTIONS          //
+    //-------------------------------//
     private void CloseAllScreens()
     {
         TitleScreen.SetActive(false);
