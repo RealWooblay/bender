@@ -292,6 +292,15 @@ namespace FishNet.Managing.Client
             NetworkManager.TransportManager.Transport.SetPort(port);
             return StartConnection();
         }
+        
+        /// <summary>
+        /// Sets the transport port, and starts the local client connection.
+        /// </summary>
+        public bool StartConnection(ushort port)
+        {
+            NetworkManager.TransportManager.Transport.SetPort(port);
+            return StartConnection();
+        }
 
         /// <summary>
         /// Called when a connection state changes for the local client.
