@@ -10,6 +10,11 @@ using UnityEngine;
 
 public class SessionManager : NetworkBehaviour
 {
+    //----Active Server Variables----//
+    private NetworkManager currentNetworkManager; // The networkmanager attached to the connected game session.
+    private Dictionary<ushort, NetworkManager> activeSessions = new Dictionary<ushort, NetworkManager>(); // Dictionary to store active game sessions and their ports
+    
+    //----Server Settings----//
     [Header("Server Settings")]
     [SerializeField] private int maxPlayers = 8;
     [SerializeField, Tooltip("The starting port of the first server, this increments for the next server to be spun up.")] 
@@ -17,16 +22,12 @@ public class SessionManager : NetworkBehaviour
     [SerializeField, Tooltip("The port which the main lobby server is hosted on")]
     private ushort lobbyPort = 7777;
     
+    //----References----//
     [Header("References")]
     [SerializeField, Tooltip("NetworkManager prefab for each game session")] 
     private GameObject networkManagerPrefab;
     [SerializeField, Tooltip("The main NetworkManager for the mainmenu scene, this connects players to other game sessions.")] 
     private NetworkManager mainNetworkManager;
-
-    [Header("Active Server Variables")] 
-    private NetworkManager currentNetworkManager;
-    [Tooltip("Dictionary to store active game sessions and their ports")]
-    private Dictionary<ushort, NetworkManager> activeSessions = new Dictionary<ushort, NetworkManager>();
     
     //-------------------------------//
     //    Start Initial Connection   //
