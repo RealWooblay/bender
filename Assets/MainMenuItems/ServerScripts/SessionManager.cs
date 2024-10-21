@@ -4,11 +4,12 @@ using FishNet.Connection;
 using FishNet.Managing;
 using FishNet.Managing.Server;
 using FishNet.Object;
+using FishNet.Transporting;
 using NUnit.Framework;
 using Unity.Collections;
 using UnityEngine;
 
-public class SessionManager : MonoBehaviour
+public class SessionManager : NetworkBehaviour
 {
     //----Active Server Variables----//
     private NetworkManager currentNetworkManager; // The networkmanager attached to the connected game session.
@@ -56,7 +57,11 @@ public class SessionManager : MonoBehaviour
     private void StartClient()
     {
         Debug.Log("Starting Client...");
-        mainNetworkManager.ClientManager.StartConnection();
+        if (!mainNetworkManager.ClientManager.StartConnection(lobbyPort))
+        {
+            Debug.LogError($"Failed to connect to lobby server with the IP[{mainNetworkManager.TransportManager.Transport.GetServerBindAddress(IPAddressType.IPv4)}] and Port[{lobbyPort}]");
+            return;
+        }
     }
    
     //-------------------------------//
